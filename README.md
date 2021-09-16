@@ -22,6 +22,7 @@ library(tidyverse)
 
 ``` r
 library(xml2)
+library(ggplot2)
 
 #read in the website
 html = read_html("https://guide.wisc.edu/faculty/")%>%
@@ -61,21 +62,54 @@ for (i in 1:26){
 ``` r
 #resulting dataset drops first empty row
 result = empty[-1,]
-
+rownames(result) = NULL
 head(result)
 ```
 
     ##                   name              position              department
-    ## 2      ABBOTT,DAVID H.             Professor Obstetrics & Gynecology
-    ## 3   ABD-ELSAYED,ALAA A Assoc Professor (Chs)          Anesthesiology
-    ## 4     ABDUALLAH,FAISAL             Professor                     Art
-    ## 5 ABRAHAM,OLUFUNMILOLA   Assistant Professor                Pharmacy
-    ## 6      ABRAMS,SAMANTHA        Assoc Lecturer      Information School
-    ## 7         ABRAMSON,LYN             Professor              Psychology
+    ## 1      ABBOTT,DAVID H.             Professor Obstetrics & Gynecology
+    ## 2   ABD-ELSAYED,ALAA A Assoc Professor (Chs)          Anesthesiology
+    ## 3     ABDUALLAH,FAISAL             Professor                     Art
+    ## 4 ABRAHAM,OLUFUNMILOLA   Assistant Professor                Pharmacy
+    ## 5      ABRAMS,SAMANTHA        Assoc Lecturer      Information School
+    ## 6         ABRAMSON,LYN             Professor              Psychology
     ##                                degree
-    ## 2    PHD 1979 University of Edinburgh
-    ## 3        MD 2000 University of Assiut
-    ## 4       PHD 2012 Royal College of Art
-    ## 5  PHD 2013 Univ of Wisconsin-Madison
-    ## 6   MA 2017 Univ of Wisconsin-Madison
-    ## 7 PHD 1978 University of Pennsylvania
+    ## 1    PHD 1979 University of Edinburgh
+    ## 2        MD 2000 University of Assiut
+    ## 3       PHD 2012 Royal College of Art
+    ## 4  PHD 2013 Univ of Wisconsin-Madison
+    ## 5   MA 2017 Univ of Wisconsin-Madison
+    ## 6 PHD 1978 University of Pennsylvania
+
+``` r
+library(stringr)
+freq_tbl = result%>%
+  group_by(department)%>%
+  mutate("faculty size" = n())%>%
+  filter(`faculty size` > 60)%>%
+  select(-`faculty size`)%>%
+  mutate('Has PhD' = str_detect(degree, "PHD"))
+head(freq_tbl)
+```
+
+    ## # A tibble: 6 x 5
+    ## # Groups:   department [6]
+    ##   name                   position            department        degree  `Has PhD`
+    ##   <chr>                  <chr>               <chr>             <chr>   <lgl>    
+    ## 1 ABRAHAM,OLUFUNMILOLA   Assistant Professor Pharmacy          PHD 20~ TRUE     
+    ## 2 ADAMS,AERON            Clinical Asst Prof  Nursing           DNP 20~ FALSE    
+    ## 3 AHRENS,SARAH ELIZABETH Clinical Assoc Prof Medicine          MD 200~ FALSE    
+    ## 4 AI,ALBERT L            Visiting Asst Prof  Mathematics       PHD 20~ TRUE     
+    ## 5 AIKEN,JEFFREY P        Adjunct Instructor  Law School        JD 197~ FALSE    
+    ## 6 AKELLA,ADITYA          Professor           Computer Sciences PHD 20~ TRUE
+
+``` r
+ggplot(data = freq_tbl)+
+  geom_bar(aes(x = department, fill = `Has PhD`))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  xlab("Department")+
+  ylab("Faculty Size")+
+  ggtitle("UW Madison's Largest Faculties by Department")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->

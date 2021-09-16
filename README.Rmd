@@ -10,6 +10,7 @@ output: github_document
 library(rvest)
 library(tidyverse)
 library(xml2)
+library(ggplot2)
 
 #read in the website
 html = read_html("https://guide.wisc.edu/faculty/")%>%
@@ -41,6 +42,26 @@ for (i in 1:26){
 
 #resulting dataset drops first empty row
 result = empty[-1,]
-
+rownames(result) = NULL
 head(result)
 ```
+
+```{r}
+library(stringr)
+freq_tbl = result%>%
+  group_by(department)%>%
+  mutate("faculty size" = n())%>%
+  filter(`faculty size` > 60)%>%
+  select(-`faculty size`)%>%
+  mutate('Has PhD' = str_detect(degree, "PHD"))
+head(freq_tbl)
+
+
+ggplot(data = freq_tbl)+
+  geom_bar(aes(x = department, fill = `Has PhD`))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  xlab("Department")+
+  ylab("Faculty Size")+
+  ggtitle("UW Madison's Largest Faculties by Department")
+```
+
